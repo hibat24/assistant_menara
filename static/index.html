@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NM 10.1.008 Agentic Assistant</title>
+    <!-- Outfit and Inter Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation & Configs -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-area">
+                    <i class="fa-solid fa-helmet-safety logo-icon"></i>
+                    <h2>Menara Prefa</h2>
+                </div>
+                <button class="sidebar-close-btn" id="sidebarCloseBtn" aria-label="Close sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-scroll-content">
+                <!-- API URL Settings -->
+                <section class="config-section">
+                    <h3><i class="fa-solid fa-link"></i> API Endpoint</h3>
+                    <div class="input-group">
+                        <input type="text" id="apiUrlInput" value="http://localhost:8000" placeholder="http://localhost:8000">
+                    </div>
+                </section>
+
+                <!-- API Status Dashboard -->
+                <section class="config-section status-section">
+                    <div class="status-header">
+                        <h3><i class="fa-solid fa-server"></i> API Status</h3>
+                        <span id="statusIndicator" class="status-badge status-checking">
+                            <span class="status-dot"></span> Checking
+                        </span>
+                    </div>
+                    
+                    <div id="statusDetails" class="status-details">
+                        <div class="collapsible-trigger" id="systemSpecsTrigger">
+                            <span>System Specifications</span>
+                            <i class="fa-solid fa-chevron-down chevron-icon"></i>
+                        </div>
+                        <div class="collapsible-content" id="systemSpecsContent">
+                            <div class="spec-row">
+                                <span class="spec-label">Model:</span>
+                                <code id="specModel">-</code>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">API Key Ready:</span>
+                                <span id="specApiKey" class="badge-neutral">-</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Collection:</span>
+                                <code id="specCollection">-</code>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Indexed Chunks:</span>
+                                <span id="specChunks" class="badge-neutral">-</span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">DB Path:</span>
+                                <code id="specDbPath">-</code>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- API Key Configuration Override -->
+                <section class="config-section">
+                    <h3><i class="fa-solid fa-key"></i> API Key Settings</h3>
+                    <div class="api-key-status" id="apiKeyStatusBox">
+                        Checking server config...
+                    </div>
+                    <div class="input-group password-group">
+                        <input type="password" id="groqApiKeyInput" placeholder="Override API Key (Optional)">
+                        <button type="button" class="toggle-password" id="togglePasswordVisibility">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- RAG Parameters -->
+                <section class="config-section">
+                    <h3><i class="fa-solid fa-sliders"></i> RAG Parameters</h3>
+                    
+                    <div class="slider-group">
+                        <div class="slider-info">
+                            <label for="indexTopK">Index Top K (Retrieve)</label>
+                            <span class="slider-value" id="indexTopKValue">4</span>
+                        </div>
+                        <input type="range" id="indexTopK" min="1" max="20" value="4">
+                        <small class="slider-help">Initial chunks retrieved from Chroma DB.</small>
+                    </div>
+
+                    <div class="slider-group">
+                        <div class="slider-info">
+                            <label for="rerankerTopN">Reranker Top N (LLM Context)</label>
+                            <span class="slider-value" id="rerankerTopNValue">2</span>
+                        </div>
+                        <input type="range" id="rerankerTopN" min="1" max="10" value="2">
+                        <small class="slider-help">Filtered chunks passed to the LLM.</small>
+                    </div>
+                </section>
+
+                <!-- Database Management -->
+                <section class="config-section">
+                    <h3><i class="fa-solid fa-database"></i> Database Management</h3>
+                    <p class="section-desc">Ingest all documents located in the server's <code>rag/corpus</code> directory into the database.</p>
+                    <button id="ingestBtn" class="btn btn-secondary">
+                        <span class="btn-text"><i class="fa-solid fa-file-import"></i> Trigger Corpus Ingestion</span>
+                        <span class="spinner hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                    </button>
+                    <div id="ingestStatus" class="ingest-status-box hidden"></div>
+                </section>
+            </div>
+
+            <!-- Clear History Action in Sidebar Footer -->
+            <div class="sidebar-footer">
+                <button id="clearChatBtn" class="btn btn-danger">
+                    <i class="fa-solid fa-trash-can"></i> Clear Chat History
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="main-content">
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle-btn" id="sidebarToggleBtn" aria-label="Open sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="header-titles">
+                        <h1>NM 10.1.008 Agentic Assistant</h1>
+                        <p class="subtitle">QA API Client for Moroccan Concrete Standard (Search-on-Demand Mode)</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle dark/light mode">
+                        <i class="fa-solid fa-sun icon-sun"></i>
+                        <i class="fa-solid fa-moon icon-moon"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Conversation Display -->
+            <section class="chat-viewport" id="chatViewport">
+                <!-- Welcome screen shown if conversation is empty -->
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-card">
+                        <div class="welcome-icon">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <h2>Bienvenue !</h2>
+                        <p>Posez vos questions concernant la norme marocaine du béton NM 10.1.008. L'assistant agentique va chercher en temps réel les articles et tableaux de référence correspondants.</p>
+                        
+                        <div class="quick-prompts">
+                            <h4>Suggestions de questions :</h4>
+                            <button class="quick-prompt-btn">Quelle est la résistance caractéristique minimale sur cylindres pour la classe B25 ?</button>
+                            <button class="quick-prompt-btn">Quelles sont les classes d'exposition pour le béton ?</button>
+                            <button class="quick-prompt-btn">Quelles sont les exigences pour l'eau de gâchage ?</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="messages-log" id="messagesLog">
+                    <!-- Dynamic chat messages go here -->
+                </div>
+            </section>
+
+            <!-- Input Form -->
+            <footer class="chat-input-area">
+                <form id="chatForm" class="chat-form">
+                    <textarea 
+                        id="chatInput" 
+                        placeholder="Ex: Quelle est la résistance caractéristique minimale sur cylindres pour la classe B25 ?" 
+                        rows="1"
+                        required></textarea>
+                    <button type="submit" id="sendBtn" class="btn-send" aria-label="Send query">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </footer>
+        </main>
+    </div>
+    
+    <script src="/static/app.js"></script>
+</body>
+</html>

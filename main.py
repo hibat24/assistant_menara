@@ -1,6 +1,8 @@
 import os
 import glob
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
@@ -28,6 +30,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files folder for HTML/CSS/JS frontend
+app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 # Pydantic Schemas
 class QueryRequest(BaseModel):
@@ -59,13 +64,16 @@ class StatusResponse(BaseModel):
     llm_model: str
     api_key_configured: bool
 
-@app.get("/", tags=["General"])
+@app.get("/", response_class=HTMLResponse, tags=["General"])
 async def root():
-    return {
-        "message": "Welcome to the Moroccan Concrete Standard NM 10.1.008 RAG API Backend.",
-        "status": "online",
-        "docs_url": "/docs"
-    }
+    """
+    Serves the HTML user interface at the API root.
+    """
+    index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    raise HTTPException(status_code=404, detail="index.html not found in static folder.")
 
 @app.post("/query", response_model=QueryResponse, tags=["RAG"])
 async def query_rag(request: QueryRequest):
