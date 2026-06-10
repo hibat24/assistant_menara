@@ -58,8 +58,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Main Title and Subtitle
-st.title("💬 NM 10.1.008 RAG Assistant")
-st.caption("Testing client for the Moroccan Concrete Standard (NM 10.1.008) QA API")
+st.title("💬 NM 10.1.008 Agentic Assistant")
+st.caption("Testing client for the Moroccan Concrete Standard (NM 10.1.008) QA API (Agentic Search-on-Demand mode)")
 
 # Sidebar Configuration
 st.sidebar.image("https://img.icons8.com/color/96/concrete-mixer.png", width=80)
@@ -168,7 +168,7 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
         # If there are contexts associated with this message, render them in an expander
         if "contexts" in message and message["contexts"]:
-            with st.expander(f"📚 Retrieved Contexts ({len(message['contexts'])} chunks)"):
+            with st.expander(f"🔍 Agent Research Trace ({len(message['contexts'])} actions)"):
                 for idx, ctx in enumerate(message["contexts"]):
                     st.markdown(f"**Chunk #{idx+1}:**")
                     st.markdown(f"<div class='context-box'>{ctx}</div>", unsafe_allow_html=True)
@@ -206,7 +206,7 @@ if query := st.chat_input("Ex: Quelle est la résistance caractéristique minima
                     
                     # Display the sources in expander
                     if contexts:
-                        with st.expander(f"📚 Retrieved Contexts ({len(contexts)} chunks)"):
+                        with st.expander(f"🔍 Agent Research Trace ({len(contexts)} actions)"):
                             for idx, ctx in enumerate(contexts):
                                 st.markdown(f"**Chunk #{idx+1}:**")
                                 st.markdown(f"<div class='context-box'>{ctx}</div>", unsafe_allow_html=True)
